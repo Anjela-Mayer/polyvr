@@ -546,7 +546,6 @@ void VRSyncNode::createNode(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int
     for (int i = 0; i < parent->getNChildren(); i++) {
         cout << parent->getChild(i)->getId() << endl;
     }
-//                if (isRegistered) node->getParent()->subChild(id); //delete parent ref if was registered by core
 
     //check if core was already registered. if yes, set its parent and nodes core
     int coreId = ++syncNodeID;
