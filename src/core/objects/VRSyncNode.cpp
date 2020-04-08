@@ -519,7 +519,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
         cout << endl;
     }
 
-//    printContainer(factory, container);
+    printContainer(factory, container);
 
     cout << "print remoteToLocalID: " << endl;
     for (auto c : remoteToLocalID){
@@ -620,9 +620,6 @@ void VRSyncNode::printRegistredContainers() {
             cout << " " << fc->getTypeName() << " Refs " << fc->getRefCount();
         }
         cout << endl;
-//        VRObject* obj = dynamic_cast<VRObject*>(fc);
-//        string str = " +++";
-//        cout << obj->printOSGTree() << endl;
     }
 }
 
