@@ -502,7 +502,7 @@ void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode) {
     CLdata.clear();
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "deserializeAndApply duration " << duration << endl;
+    cout << "deserializeAndApply duration " << duration.count() << endl;
 }
 
 void VRSyncChangelist::gatherChangelistData(VRSyncNodePtr syncNode, string& data) {

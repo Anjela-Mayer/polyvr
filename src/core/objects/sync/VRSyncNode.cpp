@@ -540,7 +540,7 @@ void VRSyncNode::update() {
 
     auto durationPosesSend = duration_cast<microseconds>(stopMeasurePosesSend - startMeasurePosesSend);
     auto durationChangesSend = duration_cast<microseconds>(stopMeasureChangesSend - startMeasureChangesSend);
-    cout << "durationPosesSend: " << durationPosesSend << " durationChangesSend " << endl;
+    cout << "durationPosesSend: " << durationPosesSend.count()  << " durationChangesSend: "  << durationChangesSend.count()  << endl;
 }
 
 void VRSyncNode::logSyncedContainer(UInt32 id) {
@@ -579,7 +579,7 @@ void VRSyncNode::handleAvatar(string data) {
     externalContainer[mouseBeaconID] = mask;
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "handleAvatar duration " << duration << endl;
+    cout << "handleAvatar duration " << duration.count()  << endl;
     //cout << " ---> mapAvatar, " << mouseBeaconID << ": " << mouseBeacon->getName() << ", " << avatarBeaconID << ": " << avatarBeacon->getName() << endl;
 }
 
@@ -628,11 +628,11 @@ void VRSyncNode::handleMapping(string mappingData) {
     //printRegistredContainers();
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "handleMapping duration " << duration << endl;
+    cout << "handleMapping duration " << duration.count() << endl;
 }
 
 void VRSyncNode::handlePoses(string poses)  {
-    auto stop = high_resolution_clock::now();
+    auto start = high_resolution_clock::now();
     //cout << "VRSyncNode::handlePoses: " << poses << endl;
     string nodeName;
     vector<string> pairs = splitString(poses, '|');
@@ -653,7 +653,7 @@ void VRSyncNode::handlePoses(string poses)  {
     //TODO: do something with poses
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "handlePoses duration " << duration << endl;
+    cout << "handlePoses duration " << duration.count()  << endl;
 }
 
 void VRSyncNode::handleOwnershipMessage(string ownership)  {
@@ -701,7 +701,7 @@ void VRSyncNode::handleOwnershipMessage(string ownership)  {
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "handleOwnershipMessage duration " << duration << endl;
+    cout << "handleOwnershipMessage duration " << duration.count()  << endl;
 }
 
 vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
@@ -715,7 +715,7 @@ void VRSyncNode::requestOwnership(string objectName){
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "requestOwnership duration " << duration << endl;
+    cout << "requestOwnership duration " << duration.count()  << endl;
 }
 void VRSyncNode::addOwnedObject(string objectName){
     owned.push_back(objectName);
