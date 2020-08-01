@@ -1,5 +1,7 @@
 #include "VRSyncNode.h"
 #include "core/networking/tcp/VRTCPServer.h"
+#include <iostream>
+#include <fstream>
 
 #include "core/objects/VRLight.h"
 #include "core/objects/OSGObject.h"
@@ -66,6 +68,12 @@ Known bugs:
 
 using namespace OSG;
 using namespace std::chrono; //TODO: remove after performance test
+ofstream handlePosesFile ("handlePoses.txt");
+ofstream serializeFile ("serialize.txt");
+ofstream hserializeTotalFile ("serializeTotal.txt");
+ofstream filteredChangelistFile ("filteredChangelist.txt");
+ofstream handleMapping ("handlePoses.txt");
+ofstream handleOwnership("handlePoses.txt");
 
 void printGeoGLIDs(Geometry* geo) {
     if (!geo) {
@@ -517,9 +525,11 @@ void VRSyncNode::sync(string uri) {
 void VRSyncNode::update() {
     auto startMeasurePosesSend = high_resolution_clock::now();
     getAndBroadcastPoses();
+    auto startserializeTotal = high_resolution_clock::now();
     auto stopMeasurePosesSend = high_resolution_clock::now();
-    auto startMeasureChangesSend = high_resolution_clock::now();
+    auto startfilterCL = high_resolution_clock::now();
     auto localChanges = changelist->filterChanges(ptr());
+    auto stopfilterCL = high_resolution_clock::now();
     if (!localChanges) return;
     if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged..
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
@@ -534,13 +544,14 @@ void VRSyncNode::update() {
     //changelist->printChangeList(ptr(), localChanges);
 
     changelist->broadcastChangeList(ptr(), localChanges, true);
-    auto stopMeasureChangesSend = high_resolution_clock::now();
     syncedContainer.clear();
+    auto stopserializeTotal = high_resolution_clock::now();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 
     auto durationPosesSend = duration_cast<microseconds>(stopMeasurePosesSend - startMeasurePosesSend);
-    auto durationChangesSend = duration_cast<microseconds>(stopMeasureChangesSend - startMeasureChangesSend);
-    cout << "durationPosesSend: " << durationPosesSend.count()  << " durationChangesSend: "  << durationChangesSend.count()  << endl;
+    auto filterCL = duration_cast<microseconds>(stopfilterCL - startfilterCL);
+    auto serializeTotal = duration_cast<microseconds>(stopserializeTotal - startserializeTotal);
+    cout << "durationPosesSend: " << durationPosesSend.count()  << " filterCL duration: "  << filterCL.count() << " serializeTotal: " << serializeTotal.count()  << endl;
 }
 
 void VRSyncNode::logSyncedContainer(UInt32 id) {
@@ -653,7 +664,7 @@ void VRSyncNode::handlePoses(string poses)  {
     //TODO: do something with poses
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "handlePoses duration " << duration.count()  << endl;
+    //cout << "handlePoses duration " << duration.count()  << endl;
 }
 
 void VRSyncNode::handleOwnershipMessage(string ownership)  {

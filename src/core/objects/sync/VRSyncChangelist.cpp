@@ -2,7 +2,8 @@
 #include "VRSyncNode.h"
 #include "core/objects/OSGObject.h"
 #include "core/utils/toString.h"
-
+#include <iostream>
+#include <fstream>
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGThreadManager.h>
 #include <OpenSG/OSGFieldContainer.h>
@@ -34,6 +35,10 @@
 
 using namespace OSG;
 using namespace std::chrono; //TODO: remove after performance test
+
+ofstream deserializeFile ("deserialize.txt");
+ofstream deserializeTotalFile ("deserializeTotal.txt");
+ofstream handleRemoteentriesFile ("handleRemoteentries.txt");
 
 VRSyncChangelist::VRSyncChangelist() {}
 VRSyncChangelist::~VRSyncChangelist() { cout << "~VRSyncChangelist::VRSyncChangelist" << endl; }
@@ -486,10 +491,14 @@ void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode) {
     vector<SerialEntry> entries;
     map<UInt32, vector<unsigned char>> fcData; // map entry localID to its binary field data
 
+    auto startdeserialize = high_resolution_clock::now();
     deserializeEntries(CLdata, entries, parentToChildren, fcData);
+    auto stopdeserialize = high_resolution_clock::now();
     cout << " deserialized " << entries.size() << " entries" << endl;
     //printDeserializedData(entries, parentToChildren, fcData);
+    auto startApply = high_resolution_clock::now();
     handleRemoteEntries(syncNode, entries, parentToChildren, fcData);
+    auto stopApply = high_resolution_clock::now();
     //printRegistredContainers();
     syncNode->wrapOSG();
 
@@ -502,7 +511,9 @@ void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode) {
     CLdata.clear();
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "deserializeAndApply duration " << duration.count() << endl;
+    auto durationDeserialize = duration_cast<microseconds>(stopdeserialize - startdeserialize);
+    auto durationApply = duration_cast<microseconds>(stopApply - startApply);
+    cout << "deserializeTotal " << duration.count() << " deserialize: " << durationDeserialize.count() << " apply: " << durationApply.count() << endl;
 }
 
 void VRSyncChangelist::gatherChangelistData(VRSyncNodePtr syncNode, string& data) {
@@ -729,7 +740,11 @@ string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist) {
 
 void VRSyncChangelist::broadcastChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl, bool doDelete) {
     if (!cl) return;
+    auto start = high_resolution_clock::now();
     string data = serialize(syncNode, cl); // serialize changes in new change list (check OSGConnection for serialization Implementation)
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "serialize duration: " << duration.count() << endl;
     syncNode->broadcast(data); // send over websocket to remote
     syncNode->broadcast("changelistEnd|");
     if (doDelete) delete cl;
