@@ -68,12 +68,7 @@ Known bugs:
 
 using namespace OSG;
 using namespace std::chrono; //TODO: remove after performance test
-ofstream handlePosesFile ("handlePoses.txt");
-ofstream serializeFile ("serialize.txt");
-ofstream hserializeTotalFile ("serializeTotal.txt");
-ofstream filteredChangelistFile ("filteredChangelist.txt");
-ofstream handleMapping ("handlePoses.txt");
-ofstream handleOwnership("handlePoses.txt");
+ofstream handlePosesFile ("performance.txt");
 
 void printGeoGLIDs(Geometry* geo) {
     if (!geo) {
@@ -532,7 +527,7 @@ void VRSyncNode::update() {
     auto stopfilterCL = high_resolution_clock::now();
     if (!localChanges) return;
     if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged..
-    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
+    //cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
 
 
     //OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
@@ -546,12 +541,12 @@ void VRSyncNode::update() {
     changelist->broadcastChangeList(ptr(), localChanges, true);
     syncedContainer.clear();
     auto stopserializeTotal = high_resolution_clock::now();
-    cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
+    //cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 
     auto durationPosesSend = duration_cast<microseconds>(stopMeasurePosesSend - startMeasurePosesSend);
     auto filterCL = duration_cast<microseconds>(stopfilterCL - startfilterCL);
     auto serializeTotal = duration_cast<microseconds>(stopserializeTotal - startserializeTotal);
-    cout << "durationPosesSend: " << durationPosesSend.count()  << " filterCL duration: "  << filterCL.count() << " serializeTotal: " << serializeTotal.count()  << endl;
+    cout <<  "filter,"  << filterCL.count() << ",serializeTotal," << serializeTotal.count() << ",sendPoses," << durationPosesSend.count();
 }
 
 void VRSyncNode::logSyncedContainer(UInt32 id) {
@@ -639,7 +634,7 @@ void VRSyncNode::handleMapping(string mappingData) {
     //printRegistredContainers();
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "handleMapping duration " << duration.count() << endl;
+    cout << ",handleMapping," << duration.count() << endl;
 }
 
 void VRSyncNode::handlePoses(string poses)  {
