@@ -46,6 +46,7 @@
 #include <OpenSG/OSGProgramChunk.h>
 
 #include <bitset>
+#include <chrono> //TODO: remove after performance test
 
 //BUGS:
 /*
@@ -64,6 +65,7 @@ Known bugs:
 */
 
 using namespace OSG;
+using namespace std::chrono; //TODO: remove after performance test
 
 void printGeoGLIDs(Geometry* geo) {
     if (!geo) {
@@ -513,24 +515,32 @@ void VRSyncNode::sync(string uri) {
 
 //update this SyncNode
 void VRSyncNode::update() {
+    auto startMeasurePosesSend = high_resolution_clock::now();
     getAndBroadcastPoses();
+    auto stopMeasurePosesSend = high_resolution_clock::now();
+    auto startMeasureChangesSend = high_resolution_clock::now();
     auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
     if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged..
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
 
 
-    OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
+    //OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
     //changelist->printChangeList(ptr(), cl);
 
 
     //printRegistredContainers(); // DEBUG: print registered container
-    printSyncedContainers();
+    //printSyncedContainers();
     //changelist->printChangeList(ptr(), localChanges);
 
     changelist->broadcastChangeList(ptr(), localChanges, true);
+    auto stopMeasureChangesSend = high_resolution_clock::now();
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
+
+    auto durationPosesSend = duration_cast<microseconds>(stopMeasurePosesSend - startMeasurePosesSend);
+    auto durationChangesSend = duration_cast<microseconds>(stopMeasureChangesSend - startMeasureChangesSend);
+    cout << "durationPosesSend: " << durationPosesSend << " durationChangesSend " << endl;
 }
 
 void VRSyncNode::logSyncedContainer(UInt32 id) {
@@ -556,6 +566,7 @@ void VRSyncNode::addRemoteAvatar(VRTransformPtr head, VRTransformPtr device) {
 }
 
 void VRSyncNode::handleAvatar(string data) {
+    auto start = high_resolution_clock::now();
     auto IDs = splitString( splitString(data, '|')[1], ':');
     UInt32 avatarBeaconID = toInt(IDs[1]);
     UInt32 mouseBeaconID = avatarDeviceBeacon->getNode()->node->getId();
@@ -566,7 +577,9 @@ void VRSyncNode::handleAvatar(string data) {
     UInt32 mask = 0;
     mask |= Node::ChildrenFieldMask;
     externalContainer[mouseBeaconID] = mask;
-
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "handleAvatar duration " << duration << endl;
     //cout << " ---> mapAvatar, " << mouseBeaconID << ": " << mouseBeacon->getName() << ", " << avatarBeaconID << ": " << avatarBeacon->getName() << endl;
 }
 
@@ -602,6 +615,7 @@ VRObjectPtr VRSyncNode::copy(vector<VRObjectPtr> children) {
 }
 
 void VRSyncNode::handleMapping(string mappingData) {
+    auto start = high_resolution_clock::now();
     auto pairs = splitString(mappingData, '|');
     for (auto p : pairs) {
         auto IDs = splitString(p, ':');
@@ -612,9 +626,13 @@ void VRSyncNode::handleMapping(string mappingData) {
         localToRemoteID[lID] = rID;
     }
     //printRegistredContainers();
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "handleMapping duration " << duration << endl;
 }
 
 void VRSyncNode::handlePoses(string poses)  {
+    auto stop = high_resolution_clock::now();
     //cout << "VRSyncNode::handlePoses: " << poses << endl;
     string nodeName;
     vector<string> pairs = splitString(poses, '|');
@@ -633,10 +651,13 @@ void VRSyncNode::handlePoses(string poses)  {
         //cout <<  "VRSyncNode::handlePoses      deviceName " << deviceName << " pose " << pose << " remotesCameraPose[nodeName] " << remotesCameraPose[nodeName] << " nodeName " << nodeName << endl;
     }
     //TODO: do something with poses
-
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "handlePoses duration " << duration << endl;
 }
 
 void VRSyncNode::handleOwnershipMessage(string ownership)  {
+    auto start = high_resolution_clock::now();
     cout << "VRSyncNode::handleOwnership" << endl;
     vector<string> str_vec = splitString(ownership, '|');
     string nodeName = str_vec[2];
@@ -677,6 +698,10 @@ void VRSyncNode::handleOwnershipMessage(string ownership)  {
         if (nodeName == name) owned.push_back(objectName);
         cout << "got ownership of object " << objectName << endl;
     }
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "handleOwnershipMessage duration " << duration << endl;
 }
 
 vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
@@ -684,8 +709,13 @@ vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
 }
 
 void VRSyncNode::requestOwnership(string objectName){
+    auto start = high_resolution_clock::now();
     string message = "ownership|request|" + name + "|" + objectName;
     broadcast(message);
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "requestOwnership duration " << duration << endl;
 }
 void VRSyncNode::addOwnedObject(string objectName){
     owned.push_back(objectName);
