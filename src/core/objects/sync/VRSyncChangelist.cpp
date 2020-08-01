@@ -30,8 +30,10 @@
 #include <OpenSG/OSGProgramChunk.h>
 
 #include <bitset>
+#include <chrono> //TODO: remove after performance test
 
 using namespace OSG;
+using namespace std::chrono; //TODO: remove after performance test
 
 VRSyncChangelist::VRSyncChangelist() {}
 VRSyncChangelist::~VRSyncChangelist() { cout << "~VRSyncChangelist::VRSyncChangelist" << endl; }
@@ -473,6 +475,7 @@ void VRSyncChangelist::deserializeEntries(vector<unsigned char>& data, vector<Se
 }
 
 void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode) {
+    auto start = high_resolution_clock::now();
     if (CLdata.size() == 0) return;
     cout << endl << "> > >  " << syncNode->getName() << " VRSyncNode::deserializeAndApply(), received data size: " << CLdata.size() << endl;
     VRSyncNodeFieldContainerMapper mapper(syncNode.get());
@@ -497,6 +500,9 @@ void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode) {
 
     //*(UInt32*)0=0; // induce segfault!
     CLdata.clear();
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "deserializeAndApply duration " << duration << endl;
 }
 
 void VRSyncChangelist::gatherChangelistData(VRSyncNodePtr syncNode, string& data) {
