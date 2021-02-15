@@ -17,14 +17,15 @@ class VRSyncConnection {
         // TODO: unused, currently handled in syncnode, needs to move here
         map<UInt32, UInt32> fcMapping; // <remote container ID, local container ID>
         map<UInt32, UInt32> typeMapping; // <remote type ID, local type ID>
-        string host;
-        int port;
+        string remoteIP;
+        string localIP;
+        int port = 11111;
         VRTCPClientPtr client;
 
     public:
-        VRSyncConnection(string host, int port);
+        VRSyncConnection(string remoteIP, string localIP);
         ~VRSyncConnection();
-        static VRSyncConnectionPtr create(string host, int port);
+        static VRSyncConnectionPtr create(string remoteIP, string localIP);
 
         void connect();
         bool send(string message);

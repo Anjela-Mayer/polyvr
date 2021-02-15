@@ -23,6 +23,7 @@ class VRTCPClient {
         void connect(string uri);
         void send(const string& message);
         bool connected();
+        void tcpHolePunching(string localIP, string remoteIP);
 };
 
 }

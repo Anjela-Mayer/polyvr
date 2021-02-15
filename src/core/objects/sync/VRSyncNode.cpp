@@ -804,8 +804,9 @@ vector<string> VRSyncNode::getRemotes() {
 void VRSyncNode::addRemote(string host) {
     cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
     string uri = host + ":" + toString(port);
-    if (remotes.count(uri)) return;
-    remotes[uri] = VRSyncConnection::create(host, port);
+    if (remotes.count(uri)) { cout << "return" << endl; return;}
+    string localIP = server->getPublicIP();
+    remotes[uri] = VRSyncConnection::create(host, localIP);
 
     // sync node ID
     auto nID = getNode()->node->getId();
