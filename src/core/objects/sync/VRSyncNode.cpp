@@ -801,7 +801,7 @@ vector<string> VRSyncNode::getRemotes() {
 }
 
 //Add remote Nodes to sync with
-void VRSyncNode::addRemote(string host, int port) {
+void VRSyncNode::addRemote(string host) {
     cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
     string uri = host + ":" + toString(port);
     if (remotes.count(uri)) return;
@@ -829,11 +829,11 @@ void VRSyncNode::handleNewConnect(string data){
 
     if (!remotes.count(remoteName)) {
         cout << "  new connection -> add remote" << remoteName << endl;
-        VRSyncNode::addRemote(ip, toInt(port));
+        VRSyncNode::addRemote(ip);
     }
 }
 
-void VRSyncNode::startInterface(int port) {
+void VRSyncNode::startInterface() {
     server = VRTCPServer::create();
     server->listen(port);
     server->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1) );

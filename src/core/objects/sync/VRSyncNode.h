@@ -30,6 +30,8 @@ class VRSyncNode : public VRTransform {
         bool doAvatars = true;
         bool handledPoses = false; // optimization
 
+        int port = 11111;
+
         VRMessageCbPtr onEvent;
 
         VRSyncChangelistPtr changelist;
@@ -108,12 +110,12 @@ class VRSyncNode : public VRTransform {
         void setDoWrapping(bool b);
         void setDoAvatars(bool b);
 
-        void addRemote(string host, int port);
+        void addRemote(string host);
 
         void addRemoteMapping(UInt32 lID, UInt32 rID);
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2);
 
-        void startInterface(int port);
+        void startInterface();
         void handleMessage(string msg);
         void update();
         void broadcast(string message);
