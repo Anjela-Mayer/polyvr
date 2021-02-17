@@ -811,8 +811,8 @@ void VRSyncNode::addRemote(string host) {
     // sync node ID
     auto nID = getNode()->node->getId();
     remotes[uri]->send("selfmap|"+toString(nID));
-    remotes[uri]->send("newConnect|"+getConnectionLink());
-    cout << "   send newConnect from " << uri << endl;
+//    remotes[uri]->send("newConnect|"+getConnectionLink());
+//    cout << "   send newConnect from " << uri << endl;
 
     sendTypes();
 }

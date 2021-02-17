@@ -110,7 +110,7 @@ VRSyncConnectionPtr VRSyncConnection::create(string remoteIP, string localIP) { 
 
 void VRSyncConnection::connect() {
     //client->connect(remoteIP, port);
-    client->tcpHolePunching(remoteIP, localIP);
+    client->tcpHolePunching(localIP, remoteIP);
     //if (!result) cout << "VRSyncConnection, Failed to open websocket to " << uri << endl;
 }
 

@@ -30,7 +30,7 @@ class VRSyncNode : public VRTransform {
         bool doAvatars = true;
         bool handledPoses = false; // optimization
 
-        int port = 30000;
+        int port = 30002;
 
         VRMessageCbPtr onEvent;
 

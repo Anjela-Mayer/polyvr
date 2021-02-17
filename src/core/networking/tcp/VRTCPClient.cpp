@@ -20,6 +20,8 @@ class TCPClient {
         tcp::socket socket;
         list<string> messages;
         thread service;
+        thread hpConnectWorker;
+        thread hpAcceptWorker;
 
         vector<boost::asio::ip::tcp::endpoint> uriToEndpoints(const string& uri) {
             boost::asio::ip::tcp::resolver resolver(io_service);
@@ -49,35 +51,49 @@ class TCPClient {
 		}
 
         void acceptHolePunching() {
+            sleep(1);
             cout << "VRTCPClient::acceptHolePunching" << endl;
             bool stop = false;
-            unsigned short port = 30000;
-            boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address_v4::any(), port);
-            boost::asio::io_service ios;
-            boost::asio::ip::tcp::acceptor acceptor(ios, ep.protocol());
+            unsigned short port = 30003;
+            boost::asio::ip::tcp::endpoint ep(boost::asio::ip::tcp::v4(), port); //address_v4::any(), port);
+//            boost::asio::io_service ios;
+            boost::asio::ip::tcp::acceptor acceptor(io_service, ep.protocol());
             boost::system::error_code ec;
-            acceptor.bind(ep, ec); //    s.bind(('', port))
 
             //Handling Errors
             if (ec != 0) {
-                std::cout << "Failed to bind the acceptor socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
+                std::cout << "VRTCPClient::acceptHolePunching: Failed to bind the acceptor socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
+                return;
             }
-            boost::asio::ip::tcp::socket sock(ios);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            boost::asio::ip::tcp::socket sock(io_service);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             boost::asio::socket_base::reuse_address reuseAddress(true);
             acceptor.set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort;
+            boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
             acceptor.set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+
+            acceptor.bind(ep, ec); //    s.bind(('', port))
 
             acceptor.listen(1); //    s.listen(1)
         //    s.settimeout(5)
             while (!stop) {  //    while not STOP.is_set():
                 bool exception_caught = true;
+//                try {  //        try:
+//                    acceptor.accept(sock); //            conn, addr = s.accept()
+//                }
                 try {  //        try:
+                    cout << " try accept" << endl;
+//                    boost::asio::ip::tcp::endpoint ep2;
+//                    boost::asio::ip::tcp::endpoint ep2;
                     acceptor.accept(sock); //            conn, addr = s.accept()
+//                    socket.connect(ep2);
+                    cout << "  accepted connection! " << endl;
                 }
                 catch (boost::system::error_code e) { //        except socket.timeout:
                     cout << "Exception at VRSyncConnection::connect2. Exception Nr. " << e.message() << endl;
                     continue; //            continue
+                }
+                catch (...) {
+                    continue;
                 }
                 if (!exception_caught) { //        else:
                     stop = true; //            STOP.set()
@@ -86,27 +102,29 @@ class TCPClient {
         }
 
         void connectHolePunching(string localIP, string remoteIP) {
+            sleep(1);
             cout << "VRTCPClient::connectHolePunching" << endl;
             bool stop = false;
-            unsigned short port = 30000;
+            unsigned short port = 30003;
 
             boost::asio::ip::tcp::endpoint local_ep(boost::asio::ip::address::from_string(localIP), port);
-            boost::asio::io_service ios;
+//            boost::asio::io_service ios;
 
-            boost::asio::ip::tcp::acceptor acceptor(ios, local_ep.protocol());
+            boost::asio::ip::tcp::acceptor acceptor(io_service, local_ep.protocol());
             boost::system::error_code ec;
-            acceptor.bind(local_ep, ec); //    s.bind(local_addr)
 
 //                        Handling Errors
             if (ec != 0) {
-                std::cout << "Failed to bind the acceptor socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
+                std::cout << "VRTCPClient::connectHolePunching: Failed to bind the acceptor socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
+                return;
             }
-            boost::asio::ip::tcp::socket sock(ios);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            boost::asio::ip::tcp::socket sock(io_service);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             boost::asio::socket_base::reuse_address reuseAddress(true);
             acceptor.set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort;
+            boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
             acceptor.set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
+            acceptor.bind(local_ep, ec); //    s.bind(local_addr)
 
             boost::asio::ip::tcp::endpoint remote_ep(boost::asio::ip::address::from_string(remoteIP), port);
 //            cout << "VRTCPClient::connectHolePunching entering loop" << endl;
@@ -124,8 +142,12 @@ class TCPClient {
                     cout << "Exception at VRSyncConnection::connect2. Exception Nr. " << e.message() << endl;
                     continue;//            continue
                 }
+                catch (...) {
+                    continue;
+                }
                 if (!exception_caught) {//        else:
                     cout << "VRTCPClient::connectHolePunching !exception_caught" << endl;
+                    cout << "remote IP: " << remoteIP << endl;
                     stop = true;//            STOP.set()
                 }
             }
@@ -150,11 +172,23 @@ class TCPClient {
             socket.connect( tcp::endpoint( boost::asio::ip::address::from_string(host), port ));
         }
 
+//        void tcpHolePunching(string localIP, string remoteIP) {
+//            //TODO: multi-threading
+//            //int t VRScene->getCurrent()->initThread()
+//            connectHolePunching(localIP, remoteIP);
+//            acceptHolePunching();
+//        }
+
         void tcpHolePunching(string localIP, string remoteIP) {
             //TODO: multi-threading
             //int t VRScene->getCurrent()->initThread()
-            connectHolePunching(localIP, remoteIP);
-            acceptHolePunching();
+            //connectHolePunching(localIP, remoteIP);
+            //acceptHolePunching();
+            hpConnectWorker = thread([this,localIP,remoteIP]() { connectHolePunching(localIP, remoteIP); });
+            hpAcceptWorker  = thread([this]() { acceptHolePunching(); });
+
+            hpConnectWorker.join();
+            hpAcceptWorker.join();
         }
 
         void connect(string uri) {
