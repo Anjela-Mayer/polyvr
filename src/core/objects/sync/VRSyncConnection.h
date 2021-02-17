@@ -19,7 +19,7 @@ class VRSyncConnection {
         map<UInt32, UInt32> typeMapping; // <remote type ID, local type ID>
         string remoteIP;
         string localIP;
-        int port = 11111;
+        int port = 30000;
         VRTCPClientPtr client;
 
     public:
